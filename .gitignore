@@ -173,6 +173,7 @@ checkpoints/
 
 # Text files
 *.txt
+!requirements.txt
 
 # Jupyter Notebook
 *.ipynb
