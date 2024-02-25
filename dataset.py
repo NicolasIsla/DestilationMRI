@@ -156,7 +156,7 @@ class Preprocess:
 
     def create_labels(self, device):
         self.device = torch.device(device)
-        model = utils.load_model(self.mode).eval().to(self.device)
+        model = utils.load_model_teacher(self.mode).eval().to(self.device)
         for file in os.listdir(self.data_dir):
             if file.endswith(".npy"):
                 data = np.load(f"{self.data_dir}{file}")
@@ -168,7 +168,7 @@ class Preprocess:
                         output = model.forward_label(batch.float().to(self.device))
                         labels.append(output.cpu().numpy())  
                 labels = np.concatenate(labels, axis=0)  
-                print(labels.shape)
+                # print(labels.shape)
                 np.save(f"{self.data_dir}{file.split('.')[0]}_labels.npy", labels)
         
 
@@ -179,6 +179,7 @@ class MRIDataset(Dataset):
         self.split = split
         self.data = torch.from_numpy(np.load(f"{self.data_dir}{self.split}.npy")) 
         self.labels = torch.from_numpy(np.load(f"{self.data_dir}{self.split}_labels.npy"))
+
         
 
     def __len__(self):
@@ -195,13 +196,25 @@ class MRIDataset(Dataset):
     
 
 class MRIDataModule(pl.LightningDataModule):
-    def __init__(self, data_dir, batch_size=32):
+    def __init__(self, data_dir, mode, batch_size=32,device="cpu",  samples=10, forced=False, dummy=False):
         super().__init__()
         self.data_dir = data_dir
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+        self.mode = mode
         self.batch_size = batch_size
-        self.setup()
+        self.samples = samples
+        self.forced = forced
+        self.dummy = dummy
+        self.device = device
     
-    def setup(self, stage=None):
+        
+    
+    def setup(self):
+        preprocess = Preprocess(self.data_dir, self.mode, self.samples, self.forced, self.dummy)
+        preprocess.preprocess()
+        preprocess.create_labels(self.device)
+
         self.train = MRIDataset(self.data_dir, "train")
         self.val = MRIDataset(self.data_dir, "val")
         self.test = MRIDataset(self.data_dir, "test")
@@ -230,20 +243,8 @@ if __name__ == "__main__":
 
 
     modes =["Sagittal", "Axial", "Coronal"]
-    preprocess = Preprocess(data_dir,
-                            mode="Sagittal",
-                            samples=1,
-                            dummy=True, 
-                            forced=True
+    for i in modes:
+        mriDataModule = MRIDataModule(data_dir, i, batch_size=32, device="cpu", samples=1, forced=True, dummy=True)
 
-                            )
-    for mode in modes:
-        preprocess.mode = mode
-        preprocess.preprocess()
-        preprocess.create_labels("cpu")
-        data = MRIDataModule(data_dir)
-        data.train_dataloader()
-        data.val_dataloader()
-        data.test_dataloader()
-        break
+    
 

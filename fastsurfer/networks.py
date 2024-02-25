@@ -120,7 +120,8 @@ class FastSurferCNN(nn.Module):
         """
         x = self.features(x)
         logits = self.classifier.forward(x)
-        return torch.max(logits, 1)[1]
+        labels = torch.argmax(logits, dim=1)
+        return labels
 
     def activation_hook(self, grad):
         self.gradients = grad
