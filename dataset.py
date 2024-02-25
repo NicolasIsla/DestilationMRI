@@ -2,7 +2,6 @@ import os
 import gdown
 import zipfile
 import gzip
-import io
 import nibabel as nib
 import shutil
 import numpy as np
@@ -14,13 +13,24 @@ from torch.utils.data import DataLoader, Dataset
 import utils
 
 class Preprocess:
-    def __init__(self, data_dir, mode, samples=10):
+    def __init__(self, data_dir, mode, samples=10, forced=False, dummy=False):
         self.data_dir = data_dir
         self.samples = samples
         self.mode = mode
+        self.forced = forced
+        self.dummy = dummy
+        if self.forced:
+            # remove all folder in the data_dir
+            for folder in os.listdir(self.data_dir):
+                if os.path.isdir(f"{self.data_dir}{folder}"):
+                    shutil.rmtree(f"{self.data_dir}{folder}")
 
-    def dowload_model(self, forced=False):
-        if not os.path.exists(f"./checkpoints") or forced:
+            for file in os.listdir(self.data_dir):
+                os.remove(f"{self.data_dir}{file}")
+            
+
+    def dowload_model(self):
+        if not os.path.exists(f"./checkpoints") or self.forced:
             
             id = "1joAF85z_K2tg7ZRUVK7rWRWrR6aFkZ9q"
             gdown.download(f"https://drive.google.com/uc?id={id}", f"./model.zip", quiet=False)  
@@ -31,8 +41,8 @@ class Preprocess:
             os.remove(f"./model.zip")
         else:
             pass
-    def download_data(self, forced=False):
-        if not os.path.exists(f"{self.data_dir}train") or forced:
+    def download_data(self):
+        if not os.path.exists(f"{self.data_dir}train") or self.forced:
             # train
             id = "1vOklcxOINBYSYU-muWoP0FTE0jr9xjpx"
             gdown.download(f"https://drive.google.com/uc?id={id}", f"{self.data_dir}train.zip", quiet=False)
@@ -46,7 +56,7 @@ class Preprocess:
             pass
 
     def download_data_dummy(self):
-        if not os.path.exists(f"{self.data_dir}train")
+        if not os.path.exists(f"{self.data_dir}train") or self.forced:
             id = "1kSQrRDZ_9aobn_mO9_yD1CRRr800jjLV"
             gdown.download(f"https://drive.google.com/uc?id={id}", f"{self.data_dir}train.zip", quiet=False)
             id = "1w8VIgFlSICZ-NKHxTNMZ-Qfu353GRgGN"
@@ -93,68 +103,117 @@ class Preprocess:
                 slice = self.padding(slice)
             out[i] = slice
         return out
+    
+    def mode_packages(self, data):  
+        if self.mode == "Sagittal":
+            # 90° rotation
+            return np.rot90(self.create_packages(data), axes=(2, 3))
+        elif self.mode == "Axial":
+            data = np.swapaxes(data, 0, 2)
+            return self.create_packages(data)
+        elif self.mode == "Coronal": 
+            data = np.swapaxes(data, 0, 1)
+            # 90° rotation
+            return np.rot90(self.create_packages(data), axes=(2,3))
+        else:
+            raise ValueError("Mode not found")
 
 
-    def preprocess(self, dummy=False):
+    def preprocess(self):
         self.dowload_model()
 
-        if dummy:
+        if self.dummy:
             self.download_data_dummy()
 
         else:
             self.download_data()
+        if not os.path.exists(f"{self.data_dir}train.npy") or self.forced:
+            for folder in os.listdir(self.data_dir):
+                if folder.endswith(".zip"):
+                    self.unzip_data(f"{self.data_dir}{folder}")
+                    folder = folder.split(".")[0]
+                    # number of samples in the folder it
+                    n = len(os.listdir(f"{self.data_dir}{folder}"))*self.samples
+                    data = np.zeros((n, 7, 256, 256))
+                    for i, file in enumerate(os.listdir(f"{self.data_dir}{folder}")):
+                        if file.endswith(".gz"):
+                            self.ungzip_data(f"{self.data_dir}{folder}/{file}")
+                            # read the nii file
+                            file_nii = file.split(".gz")[0]
+                            data_mri = self.read_nii(f"{self.data_dir}{folder}/{file_nii}")
+                            os.remove(f"{self.data_dir}{folder}/{file_nii}")
 
-        for folder in os.listdir(self.data_dir):
-            if folder.endswith(".zip"):
-                self.unzip_data(f"{self.data_dir}{folder}")
-                folder = folder.split(".")[0]
-                # number of samples in the folder it
-                n = len(os.listdir(f"{self.data_dir}{folder}"))*self.samples
-                data = np.zeros((n, 7, 256, 256))
-                for i, file in enumerate(os.listdir(f"{self.data_dir}{folder}")):
-                    if file.endswith(".gz"):
-                        self.ungzip_data(f"{self.data_dir}{folder}/{file}")
-                        # read the nii file
-                        file_nii = file.split(".gz")[0]
-                        data_mri = self.read_nii(f"{self.data_dir}{folder}/{file_nii}")
-                        os.remove(f"{self.data_dir}{folder}/{file_nii}")
-
-                        # create the packages
-                        packages = self.create_packages(data_mri)
-                        
-                        data[i*self.samples:(i+1)*self.samples] = packages
+                            # create the packages
+                            packages = self.mode_packages(data_mri)
+                            
+                            data[i*self.samples:(i+1)*self.samples] = packages
 
                     
             
-                # save the data
-                np.save(f"{self.data_dir}{folder}.npy", data)
-                print(data.shape)
+                    # save the data
+                    np.save(f"{self.data_dir}{folder}.npy", data)
+                    # print(data.shape)
 
     def create_labels(self, device):
-        model = utils.load_model(self.mode).eval()
+        self.device = torch.device(device)
+        model = utils.load_model(self.mode).eval().to(self.device)
         for file in os.listdir(self.data_dir):
             if file.endswith(".npy"):
                 data = np.load(f"{self.data_dir}{file}")
-                data = torch.tensor(data).float()
-                data_loader = torch.utils.data.DataLoader(data, batch_size=16)
+                data_loader = DataLoader(data, batch_size=1, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
+                
                 labels = []
                 for batch in data_loader:
                     with torch.no_grad():
-                        output = model.forward_label(batch)
-                        labels.append(output)
-                labels = torch.cat(labels, dim=0)
-                np.save(f"{self.data_dir}{file.split('.')[0]}_labels.npy", labels.numpy())
+                        output = model.forward_label(batch.float().to(self.device))
+                        labels.append(output.cpu().numpy())  
+                labels = np.concatenate(labels, axis=0)  
                 print(labels.shape)
-                
-    
-                
+                np.save(f"{self.data_dir}{file.split('.')[0]}_labels.npy", labels)
+        
 
-# class MRIDataModule(pl.LightningDataModule):
-#     def __init__(self, data_dir, batch_size=32, samples=10):
-#         super().__init__()
-#         self.data_dir = data_dir
-#         self.batch_size = batch_size
-#         self.samples = samples
+class MRIDataset(Dataset):
+    def __init__(self, data_dir, split):
+        super().__init__()
+        self.data_dir = data_dir
+        self.split = split
+        self.data = torch.from_numpy(np.load(f"{self.data_dir}{self.split}.npy")) 
+        self.labels = torch.from_numpy(np.load(f"{self.data_dir}{self.split}_labels.npy"))
+        
+
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, idx):
+        return self.data[idx], self.labels[idx]
+    
+    def __repr__(self):
+        return f"ImageNet Dataset: {self.split} split"
+    
+    def __str__(self):
+        return f"ImageNet Dataset: {self.split} split"
+    
+
+class MRIDataModule(pl.LightningDataModule):
+    def __init__(self, data_dir, batch_size=32):
+        super().__init__()
+        self.data_dir = data_dir
+        self.batch_size = batch_size
+        self.setup()
+    
+    def setup(self, stage=None):
+        self.train = MRIDataset(self.data_dir, "train")
+        self.val = MRIDataset(self.data_dir, "val")
+        self.test = MRIDataset(self.data_dir, "test")
+    
+    def train_dataloader(self):
+        return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=2, persistent_workers=True, pin_memory=True)
+    
+    def val_dataloader(self):
+        return DataLoader(self.val, batch_size=self.batch_size, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
+    
+    def test_dataloader(self):
+        return DataLoader(self.test, batch_size=self.batch_size, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
         
 
 
@@ -168,11 +227,23 @@ if __name__ == "__main__":
     data_dir = "D:/data3/"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
+
+
+    modes =["Sagittal", "Axial", "Coronal"]
     preprocess = Preprocess(data_dir,
                             mode="Sagittal",
-                            samples=2
-                            )
-    preprocess.preprocess(dummy=True)
-    preprocess.create_labels()
+                            samples=1,
+                            dummy=True, 
+                            forced=True
 
-    # read the data
+                            )
+    for mode in modes:
+        preprocess.mode = mode
+        preprocess.preprocess()
+        preprocess.create_labels("cpu")
+        data = MRIDataModule(data_dir)
+        data.train_dataloader()
+        data.val_dataloader()
+        data.test_dataloader()
+        break
+
