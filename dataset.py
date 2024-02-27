@@ -105,13 +105,13 @@ class Preprocess:
         return out
     
     def mode_packages(self, data):  
-        if self.mode == "Sagittal":
+        if self.mode == "sagittal":
             # 90° rotation
             return np.rot90(self.create_packages(data), axes=(2, 3))
-        elif self.mode == "Axial":
+        elif self.mode == "axial":
             data = np.swapaxes(data, 0, 2)
             return self.create_packages(data)
-        elif self.mode == "Coronal": 
+        elif self.mode == "coronal": 
             data = np.swapaxes(data, 0, 1)
             # 90° rotation
             return np.rot90(self.create_packages(data), axes=(2,3))
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         os.makedirs(data_dir)
 
 
-    modes =["Sagittal", "Axial", "Coronal"]
+    modes =["sagittal", "axial", "coronal"]
     for i in modes:
         mriDataModule = MRIDataModule(data_dir, i, batch_size=32, device="cpu", samples=1, forced=True, dummy=True)
 

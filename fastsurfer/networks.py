@@ -118,8 +118,7 @@ class FastSurferCNN(nn.Module):
         :param torch.Tensor x: input image
         :return torch.Tensor logits: prediction logits
         """
-        x = self.features(x)
-        logits = self.classifier.forward(x)
+        logits = self.forward(x)
         labels = torch.argmax(logits, dim=1)
         return labels
 
