@@ -177,10 +177,10 @@ class MRIDataset(Dataset):
         super().__init__()
         self.data_dir = data_dir
         self.split = split
-       
 
         self.data = torch.from_numpy(np.load(f"{self.data_dir}{self.split}.npy")).float()
-        self.labels = torch.from_numpy(np.load(f"{self.data_dir}{self.split}_labels.npy")).float()
+        self.labels = torch.from_numpy(np.load(f"{self.data_dir}{self.split}_labels.npy")).long()
+
 
 
         
