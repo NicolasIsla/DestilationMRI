@@ -6,7 +6,7 @@ import importlib.util
 import os
 
 current_dir = os.path.dirname(os.path.abspath(__file__))   
-spec = importlib.util.spec_from_file_location("smal_sub_module", os.path.join(current_dir, "small_sub_module.py"))
+spec = importlib.util.spec_from_file_location("small_sub_module", os.path.join(current_dir, "small_sub_module.py"))
 ssm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ssm)
 class FastSwimmerCNN(nn.Module):
