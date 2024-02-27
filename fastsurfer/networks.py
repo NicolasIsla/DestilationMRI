@@ -21,10 +21,7 @@ import torch.nn.functional as F
 import os
 import importlib.util
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-spec = importlib.util.spec_from_file_location("sub_module", os.path.join(current_dir, "sub_module.py"))
-sm = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(sm)
+import fastsurfer.sub_module as sm
 
 
 class FastSurferCNN(nn.Module):
