@@ -126,7 +126,7 @@ if __name__ == '__main__':
         logger=[logger, csv_logger], # Usar el logger de TensorBoard y el logger de CSV
         log_every_n_steps=50,  # Guardar los logs cada paso
         callbacks=[checkpoint_callback, early_stopping_callback], # Callbacks
-        # deterministic=True,  # Hacer que el entrenamiento sea determinista
+        # deterministic=True,  # Hacer que el entrenamiento sea deterministals
         max_epochs=args['epochs'],  # Número máximo de épocas
         accelerator="gpu",
         devices=[args['device']],
