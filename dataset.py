@@ -11,6 +11,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 import utils
+from tqdm import tqdm
 
 class Preprocess:
     def __init__(self, data_dir, mode, samples=10, forced=False, dummy=False):
@@ -158,7 +159,11 @@ class Preprocess:
     def create_labels(self, device):
         self.device = torch.device(device)
         model = utils.load_model_teacher(self.mode).eval().to(self.device)
-        for file in os.listdir(self.data_dir):
+        files = os.listdir(self.data_dir)
+    
+        progress_bar = tqdm(files, desc='Creating labels', unit='file')
+
+        for file in progress_bar:
             if file.endswith(".npy"):
                 data = np.load(f"{self.data_dir}{file}")
                 data_loader = DataLoader(data, batch_size=1, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
@@ -250,15 +255,19 @@ class MRIDataModule(pl.LightningDataModule):
 
         
 
-# if __name__ == "__main__":
-#     data_dir = "D:/data3/"
-#     if not os.path.exists(data_dir):
-#         os.makedirs(data_dir)
+if __name__ == "__main__":
+    data_dir = "D:/data3/"
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
 
 
-#     modes =["sagittal", "axial", "coronal"]
-#     for i in modes:
-#         mriDataModule = MRIDataModule(data_dir, i, batch_size=32, device="cpu", samples=1, forced=True, dummy=True)
-
+    modes =["sagittal", "axial", "coronal"]
+    for i in modes:
+        mriDataModule = MRIDataModule(data_dir, i,
+                                    batch_size=32, device=0, samples=1, forced=1, dummy=1)
+        
+        mriDataModule.prepare_data()
+        mriDataModule.setup()
+        break
     
 
