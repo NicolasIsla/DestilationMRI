@@ -2,6 +2,7 @@ import os
 import torch
 from fastsurfer.networks import FastSurferCNN
 from fastswimmer.small_networks import FastSwimmerCNN
+# import fastswimmer.small_networks as ssm # solucionar el problema de importar small_sub_module
 import argparse
 
 def load_model_teacher(model_name):
@@ -205,7 +206,9 @@ def get_arguments(log_dir, type):
     dm = get_data_module(args['dataset'], args['batch_size'], f"{args['data_dir']}/{args['dataset']}/", args['samples'], args['forced'], args['dummy'])
     dm.prepare_data()
     dm.setup()
-    print(f"DataModule")
+    dm.dummy = 0
+    dm.forced = 0 
+    # print(f"DataModule")
 
     
 
