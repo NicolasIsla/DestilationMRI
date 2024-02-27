@@ -8,7 +8,7 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))   
 
 
-import small_sub_module as ssm
+import fastswimmer.small_sub_module as ssm
 
 class FastSwimmerCNN(nn.Module):
     def __init__(self, params):
