@@ -120,7 +120,8 @@ class Preprocess:
 
 
     def preprocess(self):
-        self.dowload_model()
+        if not os.path.exists(f"./checkpoints"):
+            self.dowload_model()
 
         if self.dummy:
             self.download_data_dummy()
@@ -249,15 +250,15 @@ class MRIDataModule(pl.LightningDataModule):
 
         
 
-if __name__ == "__main__":
-    data_dir = "D:/data3/"
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
+# if __name__ == "__main__":
+#     data_dir = "D:/data3/"
+#     if not os.path.exists(data_dir):
+#         os.makedirs(data_dir)
 
 
-    modes =["sagittal", "axial", "coronal"]
-    for i in modes:
-        mriDataModule = MRIDataModule(data_dir, i, batch_size=32, device="cpu", samples=1, forced=True, dummy=True)
+#     modes =["sagittal", "axial", "coronal"]
+#     for i in modes:
+#         mriDataModule = MRIDataModule(data_dir, i, batch_size=32, device="cpu", samples=1, forced=True, dummy=True)
 
     
 
