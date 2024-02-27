@@ -212,9 +212,11 @@ class MRIDataModule(pl.LightningDataModule):
         self.device = device
     
     def prepare_data(self):
-        preprocess = Preprocess(self.data_dir, self.mode, self.samples, self.forced, self.dummy)
-        preprocess.preprocess()
-        preprocess.create_labels(self.device)
+        # correr en caso de que no exista la data guardada
+        if not os.path.exists(f"{self.data_dir}train.npy") or self.forced:
+            preprocess = Preprocess(self.data_dir, self.mode, self.samples, self.forced, self.dummy)
+            preprocess.preprocess()
+            preprocess.create_labels(self.device)
 
         
         
