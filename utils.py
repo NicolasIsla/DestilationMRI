@@ -203,6 +203,7 @@ def get_arguments(log_dir, type):
 
     # Cargar el datamodule
     dm = get_data_module(args['dataset'], args['batch_size'], f"{args['data_dir']}/{args['dataset']}/", args['samples'], args['forced'], args['dummy'])
+    dm.prepare_data()
     dm.setup()
     print(f"DataModule")
 
