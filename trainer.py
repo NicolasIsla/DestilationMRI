@@ -94,7 +94,6 @@ if __name__ == '__main__':
         os.makedirs(log_dir)
 
     args, name, exp_dir, ckpt, version, dm, net = get_arguments(log_dir, "trainer")
-    print("hola")
 
     if ckpt is not None:
         model = TrainerModule.load_from_checkpoint(checkpoint_path=ckpt, model=net)

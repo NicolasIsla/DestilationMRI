@@ -208,16 +208,24 @@ class MRIDataModule(pl.LightningDataModule):
         self.dummy = dummy
         self.device = device
     
-        
-    
-    def setup(self):
+    def prepare_data(self):
         preprocess = Preprocess(self.data_dir, self.mode, self.samples, self.forced, self.dummy)
         preprocess.preprocess()
         preprocess.create_labels(self.device)
 
-        self.train = MRIDataset(self.data_dir, "train")
-        self.val = MRIDataset(self.data_dir, "val")
-        self.test = MRIDataset(self.data_dir, "test")
+        
+        
+    
+    def setup(self, stage=None):
+        if stage == 'fit' or stage is None:
+            self.train = MRIDataset(self.data_dir, "train")
+            self.val = MRIDataset(self.data_dir, "val")
+        if stage == 'test' or stage is None:
+            self.test = MRIDataset(self.data_dir, "test")
+
+            
+
+        
     
     def train_dataloader(self):
         return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=2, persistent_workers=True, pin_memory=True)
