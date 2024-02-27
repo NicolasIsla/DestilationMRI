@@ -203,7 +203,7 @@ def get_arguments(log_dir, type):
     name, exp_dir, ckpt = get_experiment(log_dir, architecture, args['dataset'], args['version'])
 
     # Cargar el datamodule
-    dm = get_data_module(args['dataset'], args['batch_size'], f"{args['data_dir']}/{args['dataset']}/", args['samples'], args['forced'], args['dummy'])
+    dm = get_data_module(args['dataset'], args['batch_size'], f"{args['data_dir']}/{args['dataset']}/", args['samples'], args['forced'], args['dummy'], args["device"])
     dm.prepare_data()
     dm.setup()
     dm.dummy = 0
@@ -248,7 +248,7 @@ def get_experiment(log_dir, architecture, dataset, version=None):
             experiment_version_dir = os.path.join(experiment_version_dir, os.listdir(experiment_version_dir)[0])
     return experiment_name, experiment_dir, experiment_version_dir
 
-def get_data_module(dataset, batch_size, data_dir, samples, forced, dummy):
+def get_data_module(dataset, batch_size, data_dir, samples, forced, dummy, device):
     from dataset import MRIDataModule
     dataset_classes = {
         'sagittal': MRIDataModule,
@@ -261,7 +261,8 @@ def get_data_module(dataset, batch_size, data_dir, samples, forced, dummy):
                                         mode=dataset,
                                         samples=samples,
                                         forced=forced,
-                                        dummy=dummy)
+                                        dummy=dummy,
+                                        device=device)
     except KeyError:
         raise ValueError(f"Invalid dataset: {dataset}")
 
