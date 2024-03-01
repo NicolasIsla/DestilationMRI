@@ -142,7 +142,7 @@ class Preprocess:
                     if "train" in folder:
                         samples = self.samples
                     else: # val test
-                        samples = 100
+                        samples = 100 if self.samples < 100 else self.samples
 
                     n = len(os.listdir(f"{self.data_dir}{folder}"))*samples
                     data = np.zeros((n, 7, 256, 256))
@@ -157,7 +157,7 @@ class Preprocess:
                             # create the packages
                             packages = self.mode_packages(data_mri, samples)
                             
-                            data[i*self.samples:(i+1)*self.samples] = packages
+                            data[i*samples:(i+1)*samples] = packages
             
                     # save the data
                     np.save(f"{self.data_dir}{folder}.npy", data)
