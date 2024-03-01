@@ -50,7 +50,6 @@ class TrainerModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        print()
         logits = self.model(x)
         loss = self.loss(logits, y)
         self.log('train/loss', loss, on_epoch=True, on_step=True, prog_bar=True)
@@ -93,7 +92,8 @@ if __name__ == '__main__':
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    args, name, exp_dir, ckpt, version, dm, net = get_arguments(log_dir, "trainer")
+    args, name, exp_dir, ckpt, version, dm, nets = get_arguments(log_dir, "trainer")
+    net = nets[0]
 
     if ckpt is not None:
         model = TrainerModule.load_from_checkpoint(checkpoint_path=ckpt, model=net)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     # Configurar el EarlyStopping para detener el entrenamiento si la pérdida de validaci 
     early_stopping_callback = EarlyStopping(
         monitor='val/accuracy',
-        patience=150,
+        patience=50,
         mode='max'
     )
     
@@ -142,4 +142,15 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join("checkpoints", name)):
         os.makedirs(os.path.join("checkpoints", name))
     torch.save(best_model.model, os.path.join("checkpoints", name, f"acc={test_accuracy:.2f}_v{version}.pt"))
+
+    # Baseline
+
+    model_baseline = nets[1]
+    model_baseline = TrainerModule(model_baseline)
+
+    test_accuracy_baseline = trainer.test(model_baseline, dm.test_dataloader())[0]['test/accuracy']*100
+    
+
+    
+
     
