@@ -75,7 +75,7 @@ def load_model_teacher(model_name):
     
 
 
-def load_model_student(model_name):
+def load_model_student(model_name, baseline=False):
     if model_name == 'sagittal':
         params = {'num_channels': 7,
         'num_filters': 64,
@@ -90,6 +90,13 @@ def load_model_student(model_name):
         }
         model = FastSwimmerCNN(params)
         model.num_classes = 51
+        if baseline:
+            dir = os.path.join('checkpoints', 'Sagittal_Weights_FastSwimmerCNN', 'ckpts', f'Epoch_14_training_state.pt')
+            weights = torch.load(dir,
+                                map_location=torch.device('cpu'))
+            model = FastSwimmerCNN(params)
+            model.num_classes = 51
+            model.load_state_dict(weights['model_state_dict'])
         return model
     elif model_name == 'axial':
         params = {'num_channels': 7,
@@ -108,8 +115,15 @@ def load_model_student(model_name):
             params=params,
         )
         model.num_classes = 79
-
+        if baseline:
+            dir = os.path.join('checkpoints', 'Axial_Weights_FastSwimmerCNN', 'ckpts', f'Epoch_14_training_state.pt')
+            weights = torch.load(dir,
+                                map_location=torch.device('cpu'))
+            model = FastSurferCNN(params)
+            model.num_classes = 79
+            model.load_state_dict(weights['model_state_dict'])
         return model
+
     
     elif model_name == 'coronal':
         params = {'num_channels': 7,
@@ -126,6 +140,13 @@ def load_model_student(model_name):
     
         model = FastSwimmerCNN(params)
         model.num_classes = 79
+        if baseline:
+            dir = os.path.join('checkpoints', 'Coronal_Weights_FastSwimmerCNN', 'ckpts', f'Epoch_14_training_state.pt')
+            weights = torch.load(dir,
+                                map_location=torch.device('cpu'))
+            model = FastSurferCNN(params)
+            model.num_classes = 79
+            model.load_state_dict(weights['model_state_dict'])
         return model
         
     else:
@@ -211,8 +232,8 @@ def get_arguments(log_dir, type):
     # print(f"DataModule")
 
     
-
-    nets = [get_architecture(architecture)]
+    model_baseline = load_model_student(architecture, baseline=True)
+    nets = [get_architecture(architecture), model_baseline]
             
     if len(nets) == 0:
         raise ValueError("No architecture specified")
