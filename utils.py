@@ -77,7 +77,7 @@ def load_model_teacher(model_name):
 
 def load_model_student(model_name, baseline=False):
     if model_name == 'sagittal':
-        params = {'num_channels': 7,
+        params = {'num_channels': 64,
         'num_filters': 64,
         'kernel_h': 5,
         'kernel_w': 5,
@@ -96,7 +96,7 @@ def load_model_student(model_name, baseline=False):
                                 map_location=torch.device('cpu'))
             model = FastSwimmerCNN(params)
             model.num_classes = 51
-            model.load_state_dict(weights['model_state_dict'])
+            model.load_state_dict(weights)
         return model
     elif model_name == 'axial':
         params = {'num_channels': 7,
