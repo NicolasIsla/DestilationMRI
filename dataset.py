@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, Dataset
 
 import utils
 from tqdm import tqdm
+import random
 
 class Preprocess:
     def __init__(self, data_dir, mode, samples=10, forced=False, dummy=False):
@@ -90,12 +91,15 @@ class Preprocess:
         data = np.pad(data, ((0,0), (0,0), (0, padding_needed)), 'constant', constant_values=0)
         return data
 
-    def create_packages(self, data):
+    def create_packages(self, data, n):
         center = len(data) // 2
-        examples = np.clip(
-                    np.random.normal(loc=center, scale=center//6, size=self.samples).astype(int),
-                    3, len(data)-4)
-        out = np.zeros((self.samples, 7, 256, 256))
+        # examples = np.clip(
+        #             np.random.normal(loc=center, scale=center//6, size=self.samples).astype(int),
+        #             3, len(data)-4)
+
+        examples = np.array([random.randint(3, len(data)-4) for _ in range(n)]).astype(int)
+
+        out = np.zeros((n, 7, 256, 256))
         
         for i, example in enumerate(examples):
             slice = data[example-3:example+4]
@@ -105,17 +109,17 @@ class Preprocess:
             out[i] = slice
         return out
     
-    def mode_packages(self, data):  
+    def mode_packages(self, data, n):  
         if self.mode == "sagittal":
             # 90° rotation
-            return np.rot90(self.create_packages(data), axes=(2, 3))
+            return np.rot90(self.create_packages(data, n), axes=(2, 3))
         elif self.mode == "axial":
             data = np.swapaxes(data, 0, 2)
-            return self.create_packages(data)
+            return self.create_packages(data, n)
         elif self.mode == "coronal": 
             data = np.swapaxes(data, 0, 1)
             # 90° rotation
-            return np.rot90(self.create_packages(data), axes=(2,3))
+            return np.rot90(self.create_packages(data, n), axes=(2,3))
         else:
             raise ValueError("Mode not found")
 
@@ -135,7 +139,12 @@ class Preprocess:
                     self.unzip_data(f"{self.data_dir}{folder}")
                     folder = folder.split(".")[0]
                     # number of samples in the folder it
-                    n = len(os.listdir(f"{self.data_dir}{folder}"))*self.samples
+                    if "train" in folder:
+                        samples = self.samples
+                    else: # val test
+                        samples = 100
+
+                    n = len(os.listdir(f"{self.data_dir}{folder}"))*samples
                     data = np.zeros((n, 7, 256, 256))
                     for i, file in enumerate(os.listdir(f"{self.data_dir}{folder}")):
                         if file.endswith(".gz"):
@@ -146,11 +155,9 @@ class Preprocess:
                             os.remove(f"{self.data_dir}{folder}/{file_nii}")
 
                             # create the packages
-                            packages = self.mode_packages(data_mri)
+                            packages = self.mode_packages(data_mri, samples)
                             
                             data[i*self.samples:(i+1)*self.samples] = packages
-
-                    
             
                     # save the data
                     np.save(f"{self.data_dir}{folder}.npy", data)
