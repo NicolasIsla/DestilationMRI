@@ -5,6 +5,7 @@ import gzip
 import nibabel as nib
 import shutil
 import numpy as np
+import torchio as tio
 
 import pytorch_lightning as pl
 import torch
@@ -79,7 +80,13 @@ class Preprocess:
             
     def read_nii(self, file_path):
         data = nib.load(file_path)
-        return data.get_fdata()
+        #normalized between 0 and 1
+        array = data.get_fdata()
+        array = (array - array.min()) / (array.max() - array.min())
+        return array
+    
+    
+
     
     def padding(self, data, size=256):
         """
@@ -97,7 +104,7 @@ class Preprocess:
         #             np.random.normal(loc=center, scale=center//6, size=self.samples).astype(int),
         #             3, len(data)-4)
 
-        examples = np.array([random.randint(3, len(data)-4) for _ in range(n)]).astype(int)
+        examples = np.array([random.randint(3, 256-4) for _ in range(n)]).astype(int)
 
         out = np.zeros((n, 7, 256, 256))
         
@@ -154,6 +161,7 @@ class Preprocess:
                             data_mri = self.read_nii(f"{self.data_dir}{folder}/{file_nii}")
                             os.remove(f"{self.data_dir}{folder}/{file_nii}")
 
+
                             # create the packages
                             packages = self.mode_packages(data_mri, samples)
                             
@@ -173,7 +181,7 @@ class Preprocess:
         for file in progress_bar:
             if file.endswith(".npy"):
                 data = np.load(f"{self.data_dir}{file}")
-                data_loader = DataLoader(data, batch_size=1, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
+                data_loader = DataLoader(data, batch_size=10, shuffle=False, num_workers=2, persistent_workers=True, pin_memory=True)
                 
                 labels = []
                 for batch in data_loader:
