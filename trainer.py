@@ -145,11 +145,13 @@ if __name__ == '__main__':
 
     # Baseline
 
-    # model_baseline = nets[1]
-    # model_baseline = TrainerModule(model_baseline)
+    model_baseline = nets[1]
+    model_baseline = TrainerModule(model_baseline)
 
-    # test_accuracy_baseline = trainer.test(model_baseline, dm.test_dataloader())[0]['test/accuracy']*100
+    test_accuracy_baseline = trainer.test(model_baseline, dm.test_dataloader())[0]['test/accuracy']*100
     
+    # coe dice
+
 
     
 
