@@ -99,11 +99,6 @@ class Preprocess:
         return data
 
     def create_packages(self, data, n):
-        center = len(data) // 2
-        # examples = np.clip(
-        #             np.random.normal(loc=center, scale=center//6, size=self.samples).astype(int),
-        #             3, len(data)-4)
-
         examples = np.array([random.randint(3, 255-4) for _ in range(n)]).astype(int)
 
         out = np.zeros((n, 7, 256, 256))
