@@ -93,11 +93,14 @@ class Preprocess:
         Add padding to the data to make it 256x256
         """
         padding_needed = size - data.shape[0]
-        data = np.pad(data, ((0, padding_needed), (0,0), (0,0)), 'constant', constant_values=0)
+        if padding_needed > 0:
+            data = np.pad(data, ((0, padding_needed), (0,0), (0,0)), 'constant', constant_values=0)
         padding_needed = size - data.shape[1]
-        data = np.pad(data, ((0,0), (0, padding_needed), (0,0)), 'constant', constant_values=0)
+        if padding_needed > 0:
+            data = np.pad(data, ((0,0), (0, padding_needed), (0,0)), 'constant', constant_values=0)
         padding_needed = size - data.shape[2]
-        data = np.pad(data, ((0,0), (0,0), (0, padding_needed)), 'constant', constant_values=0)
+        if padding_needed > 0:
+            data = np.pad(data, ((0,0), (0,0), (0, padding_needed)), 'constant', constant_values=0)
         return data
 
     def create_packages(self, data, n):
@@ -106,13 +109,11 @@ class Preprocess:
         out = np.zeros((n, 7, 256, 256))
         
         for i, example in enumerate(examples):
-            if data.shape[0] != 256:
+            if data.shape[0] != 256 or data.shape[1] != 256 or data.shape[2] != 256:
                 data = self.padding(data)
 
             slice = data[example-3:example+4]
             # in case of error in the dimensions
-            if slice.shape[1] != 256 or slice.shape[2] != 256:
-                slice = self.padding(slice)
             out[i] = slice
         return out
     
