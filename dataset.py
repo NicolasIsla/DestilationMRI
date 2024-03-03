@@ -92,6 +92,8 @@ class Preprocess:
         """
         Add padding to the data to make it 256x256
         """
+        padding_needed = size - data.shape[0]
+        data = np.pad(data, ((0, padding_needed), (0,0), (0,0)), 'constant', constant_values=0)
         padding_needed = size - data.shape[1]
         data = np.pad(data, ((0,0), (0, padding_needed), (0,0)), 'constant', constant_values=0)
         padding_needed = size - data.shape[2]
@@ -104,6 +106,9 @@ class Preprocess:
         out = np.zeros((n, 7, 256, 256))
         
         for i, example in enumerate(examples):
+            if data.shape[0] != 256:
+                data = self.padding(data)
+
             slice = data[example-3:example+4]
             # in case of error in the dimensions
             if slice.shape[1] != 256 or slice.shape[2] != 256:
@@ -141,12 +146,9 @@ class Preprocess:
                     self.unzip_data(f"{self.data_dir}{folder}")
                     folder = folder.split(".")[0]
                     # number of samples in the folder it
-                    if "train" in folder:
-                        samples = self.samples
-                    else: # val test
-                        samples = 100 if self.samples < 100 else self.samples
+                    
 
-                    n = len(os.listdir(f"{self.data_dir}{folder}"))*samples
+                    n = len(os.listdir(f"{self.data_dir}{folder}"))*self.samples
                     data = np.zeros((n, 7, 256, 256))
                     for i, file in enumerate(os.listdir(f"{self.data_dir}{folder}")):
                         if file.endswith(".gz"):
@@ -158,9 +160,9 @@ class Preprocess:
 
 
                             # create the packages
-                            packages = self.mode_packages(data_mri, samples)
+                            packages = self.mode_packages(data_mri, self.samples)
                             
-                            data[i*samples:(i+1)*samples] = packages
+                            data[i*self.samples:(i+1)*self.samples] = packages
             
                     # save the data
                     np.save(f"{self.data_dir}{folder}.npy", data)
