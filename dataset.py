@@ -5,7 +5,7 @@ import gzip
 import nibabel as nib
 import shutil
 import numpy as np
-import torchio as tio
+# import torchio as tio
 
 import pytorch_lightning as pl
 import torch
