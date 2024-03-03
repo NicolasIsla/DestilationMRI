@@ -107,13 +107,10 @@ class Preprocess:
         examples = np.array([random.randint(3, 255-4) for _ in range(n)]).astype(int)
 
         out = np.zeros((n, 7, 256, 256))
-        
-        for i, example in enumerate(examples):
-            if data.shape[0] != 256 or data.shape[1] != 256 or data.shape[2] != 256:
+        if data.shape[0] != 256 or data.shape[1] != 256 or data.shape[2] != 256:
                 data = self.padding(data)
-
+        for i, example in enumerate(examples):
             slice = data[example-3:example+4]
-            # in case of error in the dimensions
             out[i] = slice
         return out
     
