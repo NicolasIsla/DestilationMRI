@@ -222,7 +222,7 @@ def get_arguments(log_dir, type):
 
     
     model_baseline = load_model_student(architecture, baseline=True)
-    nets = [get_architecture(architecture), model_baseline]
+    nets = [get_architecture(architecture), model_baseline, load_model_teacher(architecture)]
             
     if len(nets) == 0:
         raise ValueError("No architecture specified")
