@@ -137,7 +137,6 @@ class KD(pl.LightningModule):
             "hard_loss": hard_loss,
             "soft_loss": soft_loss,
         }
-        print(losses)
 
         
 
