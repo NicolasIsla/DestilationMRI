@@ -131,7 +131,7 @@ class KD(pl.LightningModule):
 
         # Soft Loss (Knowledge Distillation)
         soft_loss = F.kl_div(F.log_softmax(student_logits / self.temperature, dim=1),
-                             F.softmax(teacher_logits / self.temperature, dim=1), reduction='batchmean') * self.temperature**2
+                             F.softmax(teacher_logits / self.temperature, dim=1), reduction='mean') * self.temperature**2
 
         losses ={
             "hard_loss": hard_loss,
