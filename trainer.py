@@ -118,7 +118,7 @@ if __name__ == '__main__':
     # Configurar el EarlyStopping para detener el entrenamiento si la pérdida de validaci 
     early_stopping_callback = EarlyStopping(
         monitor='val/accuracy',
-        patience=50,
+        patience=20,
         mode='max'
     )
     
@@ -150,7 +150,6 @@ if __name__ == '__main__':
 
     test_accuracy_baseline = trainer.test(model_baseline, dm.test_dataloader())[0]['test/accuracy']*100
     
-    # coe dice
 
 
     
