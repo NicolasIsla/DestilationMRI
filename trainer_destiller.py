@@ -18,12 +18,11 @@ import torchmetrics
 import pytorch_lightning as pl
 
 class KD(pl.LightningModule):
-    def __init__(self, teacher: nn.Module, student: nn.Module, in_dims: int, lr: float = 1e-3, num_classes: int = 1000, temperature: float = 16.0, feature_matching: bool = True):
+    def __init__(self, teacher: nn.Module, student: nn.Module, in_dims: int, lr: float = 1e-3, num_classes: int = 1000, temperature: float = 16.0):
         super().__init__()
         self.save_hyperparameters(ignore=['teacher', 'student'])
         self.in_dims = in_dims
         self.temperature = temperature
-        self.feature_matching = feature_matching
         
         self.teacher = teacher
         self.student = student
@@ -38,8 +37,7 @@ class KD(pl.LightningModule):
         # Teacher without dropout
         self.teacher.eval()
         
-        self.teacher_feature_size = teacher.features(torch.zeros(1, *in_dims)).shape[1:]
-        self.student_feature_size = student.features(torch.zeros(1, *in_dims)).shape[1:]
+        
         
         # Metrics
         self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
@@ -49,8 +47,6 @@ class KD(pl.LightningModule):
         # Logging
         self.validation_step_outputs = []
         
-        # Losses
-        # self.feature_matching_loss = FeatureMatchingLoss(self.student_feature_size, self.teacher_feature_size) if self.feature_matching else None
         
     def forward(self, x):
         ValueError("Not implemented, use self.teacher or self.student")
@@ -109,12 +105,7 @@ class KD(pl.LightningModule):
             {'params': [p for n, p in self.student.named_parameters() if 'bn' in n], 'weight_decay': 0},
         ]
         
-        if self.feature_matching_loss is not None:
-            fm_params = [
-                {'params': [p for n, p in self.feature_matching_loss.named_parameters() if 'bn' not in n], 'weight_decay': weight_decay},
-                {'params': [p for n, p in self.feature_matching_loss.named_parameters() if 'bn' in n], 'weight_decay': 0}
-            ]
-            parameters.extend(fm_params)
+        
             
         optimizer = optim.SGD(parameters, lr=lr, momentum=momentum)
         # optimizer = optim.SGD(self.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
@@ -147,30 +138,11 @@ class KD(pl.LightningModule):
             "soft_loss": soft_loss,
         }
 
-        # if self.feature_matching_loss is not None:
-        #     # Feature Matching Loss
-        #     fm_loss = self.feature_matching_loss(self.teacher.features(xs), self.student.features(xs))
-        #     losses["fm_loss"] = fm_loss
+        
 
         return student_logits, losses
     
-# class FeatureMatchingLoss(torch.nn.Module):
-#     def __init__(self, big_shape = (2048, 4, 4), small_shape = (512, 4, 4), alpha=1.0):
-#         super(FeatureMatchingLoss, self).__init__()
-#         # Mejor usar una convolución
-#         self.att = torch.nn.Conv2d(big_shape[0], small_shape[0], kernel_size=big_shape[1]-small_shape[1]+1, stride=big_shape[1]-small_shape[1]+1)
-#         nn.init.xavier_uniform_(self.att.weight)
-#         nn.init.constant_(self.att.bias, 0.0)
-#         self.loss = torch.nn.CosineEmbeddingLoss()
-#         self.alpha = alpha
-        
-#     def forward(self, y, x):
-#         x = self.att(x)
-#         x = x.view(x.size(0), -1)
-#         y = y.view(y.size(0), -1)
-#         x = F.normalize(x, p=2, dim=1)
-#         y = F.normalize(y, p=2, dim=1)
-#         return self.loss(x, y, torch.ones(x.size(0)).to(x.device)) * self.alpha
+
             
             
 if __name__ == "__main__":
