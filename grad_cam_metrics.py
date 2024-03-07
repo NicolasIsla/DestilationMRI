@@ -117,7 +117,8 @@ if __name__ == "__main__":
         keys = [key for key in keys if "teacher" not in key] 
         
         # Eliminar el prefijo "model." de las claves del state_dict
-        new_state_dict = {key.replace("student.", ""): state_dict[key]  for key in keys}
+        new_state_dict = {key.replace("model.", ""): state_dict[key]  for key in keys}
+        # new_state_dict = {key.replace("student.", ""): state_dict[key]  for key in keys}
         
         student.load_state_dict(new_state_dict)
 
