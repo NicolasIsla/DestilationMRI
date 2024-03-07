@@ -19,23 +19,27 @@ import pytorch_lightning as pl
 
     
 class GradCamLabel(pl.LightningModule):
-    def __init__(self, teacher: nn.Module, student: nn.Module, test_dataloader: torch.utils.data.DataLoader, path: str):
+    def __init__(self, teacher: nn.Module, student: nn.Module, test_dataloader: torch.utils.data.DataLoader , path: str, device):
         super().__init__()
         self.teacher = teacher
         self.student = student
         self.test_dataloader = test_dataloader
+        self.device = torch.device(device)
         
-        self.path = path
+        self.path = os.path.join(path.split["/"][:-2], "metrics")
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
 
 
         # Teacher not in gpu
-        self.teacher = self.teacher.to("cpu")
+        self.teacher = self.teacher.to(self.device)
 
         # Teacher without dropout
         self.teacher.eval()  
 
 
-        self.student = self.student.to("cpu")
+        self.student = self.student.to(self.device)
         self.student.eval()
         self.num_classes = self.student.num_classes
     
@@ -54,9 +58,9 @@ class GradCamLabel(pl.LightningModule):
         norm1 = torch.norm(tensor1)
         norm2 = torch.norm(tensor2)
 
-        cosine_similarity = dot_product / (norm1 * norm2)
+        value = dot_product / (norm1 * norm2)
 
-        return cosine_similarity
+        return value.item()
     
     def loop(self):
         dict_metrics = {}
@@ -65,19 +69,18 @@ class GradCamLabel(pl.LightningModule):
             coe_total = 0
             for batch in self.test_dataloader():
                 xs, _ = batch
-                n = xs.size(0)
+                xs = xs.to(self.device)
                 heatmaps_teacher, heatmaps_student = self.grad_cam_step(xs, label)
                 coe_batch = self.cosine_similarity(heatmaps_teacher, heatmaps_student)
-                coe_total += coe_batch * n
+                coe_total += coe_batch 
             
             coe_total /= length
             dict_metrics[label] = coe_total
-            break
         
         self.save(dict_metrics)
     
     def save(self, dict_metrics):
-        with open(self.path, 'w') as archivo:
+        with open(os.path.join(self.path,"metrics.txt"), 'w') as archivo:
             json.dump(dict_metrics, archivo)
 
 
@@ -90,7 +93,7 @@ if __name__ == "__main__":
     log_dir = "distiller_logs"
     os.makedirs(log_dir, exist_ok=True)
 
-    args, name, exp_dir, ckpt, version, dm, nets = get_arguments(log_dir, "distiller")
+    args, name, exp_dir, ckpt, version, dm, nets = get_arguments_metrics(log_dir, "distiller")
     
     # Cargar el modelo del profesor
     # teacher, student = nets
@@ -113,7 +116,7 @@ if __name__ == "__main__":
 
     else:
         raise ValueError("No checkpoint provided")
-    print(ckpt)
-    grad_cam = GradCamLabel(teacher, student, dm.test_dataloader, "test.json")
+    
+    grad_cam = GradCamLabel(teacher, student, dm.test_dataloader, ckpt)
     grad_cam.loop()
     

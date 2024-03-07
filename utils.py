@@ -218,7 +218,46 @@ def get_arguments(log_dir, type):
     dm.setup()
     dm.dummy = 0
     dm.forced = 0 
-    # print(f"DataModule")
+
+    
+    model_baseline = load_model_student(architecture, baseline=True)
+    nets = [get_architecture(architecture), model_baseline, load_model_teacher(architecture)]
+            
+    if len(nets) == 0:
+        raise ValueError("No architecture specified")
+    
+    elif len(nets) == 1:
+        nets = nets[0]
+    
+    # Si no se especifica versión, seleccionar la nueva para entrenar
+    version = len(versions) if args['version'] is None else args['version']
+
+    return args, name, exp_dir, ckpt, version, dm, nets
+
+def get_arguments_metrics(log_dir, type):
+    import sys
+    
+    args = getattr(sys.modules[__name__], f"get_arguments_{type}")()
+    
+    architecture = args["dataset"]
+    
+    versions = get_versions(log_dir, architecture, args['dataset']) # [0, 1, 2, ...], [] si no hay versiones
+        
+    # Mostrar las versiones disponibles
+    if args['show_versions']:
+        print(f"Versions: {versions}")
+        exit(0)
+    
+
+    # Obtener el directorio del experimento y el checkpoint
+    name, exp_dir, ckpt = get_experiment(log_dir, architecture, args['dataset'], args['version'])
+
+    # Cargar el datamodule
+    dm = get_data_module(args['dataset'], 1, f"{args['data_dir']}/{args['dataset']}/", args['samples'], args['forced'], args['dummy'], args["device"])
+    dm.prepare_data()
+    dm.setup()
+    dm.dummy = 0
+    dm.forced = 0 
 
     
     model_baseline = load_model_student(architecture, baseline=True)
