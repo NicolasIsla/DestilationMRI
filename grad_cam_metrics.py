@@ -107,9 +107,11 @@ if __name__ == "__main__":
     if ckpt is not None:
         state_dict = torch.load(ckpt, map_location=torch.device('cpu'))["state_dict"]
         keys = state_dict.keys()
+        # drop teacher weights
+        keys = [key for key in keys if "teacher" not in key]
 
         # Eliminar el prefijo "model." de las claves del state_dict
-        # new_state_dict = {key.replace("model.", ""): value for key, value in state_dict.items()}
+        new_state_dict = {key.replace("student.", ""): value for key, value in state_dict.items()}
         student.load_state_dict(state_dict)
 
     else:
