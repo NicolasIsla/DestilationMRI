@@ -27,7 +27,7 @@ class GradCamLabel(pl.LightningModule):
         self.test_dataloader = test_dataloader
         self.device_aux = torch.device(device)
         
-        self.path = os.path.join(path.split("checkpoints")[0], "metrics")
+        self.path = os.path.join(path.split("checkpoints")[0], "metrics_grad_cam")
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
