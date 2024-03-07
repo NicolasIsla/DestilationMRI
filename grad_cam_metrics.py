@@ -94,10 +94,12 @@ if __name__ == "__main__":
     from utils import get_arguments_metrics
     
     # Nombre del experimento
-    log_dir = "distiller_logs"
+    # log_dir = "distiller_logs"
+    log_dir = "trainer_logs"
+
     os.makedirs(log_dir, exist_ok=True)
 
-    args, name, exp_dir, ckpt, version, dm, nets = get_arguments_metrics(log_dir, "distiller")
+    args, name, exp_dir, ckpt, version, dm, nets = get_arguments_metrics(log_dir, "trainer")
     
     # Cargar el modelo del profesor
     # teacher, student = nets
