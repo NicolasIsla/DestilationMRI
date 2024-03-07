@@ -24,11 +24,9 @@ class GradCamLabel(pl.LightningModule):
         self.teacher = teacher
         self.student = student
         self.test_dataloader = test_dataloader
+        
         self.path = path
 
-        # Teacher not trainable
-        for param in self.teacher.parameters():
-            param.requires_grad = False
 
         # Teacher not in gpu
         self.teacher = self.teacher.to("cpu")
@@ -36,8 +34,6 @@ class GradCamLabel(pl.LightningModule):
         # Teacher without dropout
         self.teacher.eval()  
 
-        for param in self.student.parameters():
-            param.requires_grad = False
 
         self.student = self.student.to("cpu")
         self.student.eval()
