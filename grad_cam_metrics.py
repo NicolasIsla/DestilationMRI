@@ -104,6 +104,7 @@ if __name__ == "__main__":
     student: nn.Module = nets[0]
     baseline: nn.Module = nets[1]
     teacher: nn.Module = nets[2]
+    print(args.device)
 
     
     # Crear el modelo de destilación
