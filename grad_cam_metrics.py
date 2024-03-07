@@ -25,7 +25,7 @@ class GradCamLabel(pl.LightningModule):
         self.teacher = teacher
         self.student = student
         self.test_dataloader = test_dataloader
-        self.device = torch.device(device)
+        self.device_aux = torch.device(device)
         
         self.path = os.path.join(path.split["/"][:-2], "metrics")
         if not os.path.exists(self.path):
@@ -34,13 +34,13 @@ class GradCamLabel(pl.LightningModule):
 
 
         # Teacher not in gpu
-        self.teacher = self.teacher.to(self.device)
+        self.teacher = self.teacher.to(self.device_aux)
 
         # Teacher without dropout
         self.teacher.eval()  
 
 
-        self.student = self.student.to(self.device)
+        self.student = self.student.to(self.device_aux)
         self.student.eval()
         self.num_classes = self.student.num_classes
     
@@ -72,7 +72,7 @@ class GradCamLabel(pl.LightningModule):
             coe_total = 0
             for batch in self.test_dataloader():
                 xs, _ = batch
-                xs = xs.to(self.device)
+                xs = xs.to(self.device_aux)
                 heatmaps_teacher, heatmaps_student = self.grad_cam_step(xs, label)
                 coe_batch = self.cosine_similarity(heatmaps_teacher, heatmaps_student)
                 coe_total += coe_batch 
