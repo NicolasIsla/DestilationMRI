@@ -15,6 +15,7 @@ import json
 
 # ⚡ PyTorch Lightning
 import pytorch_lightning as pl
+from tqdm import tqdm
 
 
     
@@ -65,6 +66,8 @@ class GradCamLabel(pl.LightningModule):
     def loop(self):
         dict_metrics = {}
         length = len(self.test_dataloader().dataset)
+        progress_bar = tqdm(total=self.num_classes, desc="GradCam per class")
+
         for label in range(self.num_classes):
             coe_total = 0
             for batch in self.test_dataloader():
@@ -76,6 +79,7 @@ class GradCamLabel(pl.LightningModule):
             
             coe_total /= length
             dict_metrics[label] = coe_total
+            progress_bar.update(1)
         
         self.save(dict_metrics)
     
@@ -117,6 +121,6 @@ if __name__ == "__main__":
     else:
         raise ValueError("No checkpoint provided")
     
-    grad_cam = GradCamLabel(teacher, student, dm.test_dataloader, ckpt)
+    grad_cam = GradCamLabel(teacher, student, dm.test_dataloader, ckpt, device=args.device)
     grad_cam.loop()
     
