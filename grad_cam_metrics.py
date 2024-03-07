@@ -109,13 +109,12 @@ if __name__ == "__main__":
         keys = state_dict.keys()
 
         # Eliminar el prefijo "model." de las claves del state_dict
-        new_state_dict = {key.replace("model.", ""): value for key, value in state_dict.items()}
-        student.load_state_dict(new_state_dict)
+        # new_state_dict = {key.replace("model.", ""): value for key, value in state_dict.items()}
+        student.load_state_dict(state_dict)
 
     else:
         raise ValueError("No checkpoint provided")
     print(ckpt)
     grad_cam = GradCamLabel(teacher, student, dm.test_dataloader, "test.json")
     grad_cam.loop()
-    
     
