@@ -165,7 +165,7 @@ if __name__ == "__main__":
     
     # Crear el modelo de destilación
     if ckpt is not None:
-        model = KD.load_from_checkpoint(ckpt, teacher=teacher, student=student, in_dims=(7, 256, 256), temperature=args['temperature'])
+        model = KD.load_from_checkpoint(ckpt, teacher=teacher, student=student, in_dims=(7, 256, 256), temperature=args['distillation_temperature'])
     else:
         model = KD(teacher, student, in_dims=(7, 256, 256), temperature=args['temperature'])
     
