@@ -18,7 +18,7 @@ import torchmetrics
 import pytorch_lightning as pl
 
 class KD(pl.LightningModule):
-    def __init__(self, teacher: nn.Module, student: nn.Module, in_dims: int, lr: float = 1e-3, num_classes: int = 1000, temperature: float = 16.0):
+    def __init__(self, teacher: nn.Module, student: nn.Module, in_dims: int, lr: float = 1e-3, temperature: float = 16.0):
         super().__init__()
         self.save_hyperparameters(ignore=['teacher', 'student'])
         self.in_dims = in_dims
@@ -36,11 +36,12 @@ class KD(pl.LightningModule):
         
         # Teacher without dropout
         self.teacher.eval()
+        num_classes = self.student.num_classes
         
         
         
         # Metrics
-        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
+        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes:)
         self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         
@@ -164,9 +165,9 @@ if __name__ == "__main__":
     
     # Crear el modelo de destilación
     if ckpt is not None:
-        model = KD.load_from_checkpoint(ckpt, teacher=teacher, student=student, in_dims=(7, 256, 256))
+        model = KD.load_from_checkpoint(ckpt, teacher=teacher, student=student, in_dims=(7, 256, 256), temperature=args['temperature'])
     else:
-        model = KD(teacher, student, in_dims=(7, 256, 256))
+        model = KD(teacher, student, in_dims=(7, 256, 256), temperature=args['temperature'])
     
     # importar loggings
     from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
