@@ -87,7 +87,7 @@ class GradCamLabel(pl.LightningModule):
             
 if __name__ == "__main__":
     import os
-    from utils import get_arguments
+    from utils import get_arguments_metrics
     
     # Nombre del experimento
     log_dir = "distiller_logs"
