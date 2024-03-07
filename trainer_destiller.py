@@ -167,7 +167,7 @@ if __name__ == "__main__":
     if ckpt is not None:
         model = KD.load_from_checkpoint(ckpt, teacher=teacher, student=student, in_dims=(7, 256, 256), temperature=args['distillation_temperature'])
     else:
-        model = KD(teacher, student, in_dims=(7, 256, 256), temperature=args['temperature'])
+        model = KD(teacher, student, in_dims=(7, 256, 256), temperature=args['distillation_temperature'])
     
     # importar loggings
     from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
