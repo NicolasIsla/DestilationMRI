@@ -41,7 +41,7 @@ class KD(pl.LightningModule):
         
         
         # Metrics
-        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes:)
+        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         
